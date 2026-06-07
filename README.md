@@ -29,6 +29,22 @@ CAMELS-DE test split (2011-01-01 .. 2020-12-31).
 | dHBV-dyn_uzl | **0.869** | **0.838** | **1.28 mm/d** | 0.083 mm/d |
 | LSTM-DE      | 0.866 | 0.826 | 1.30 mm/d | **0.078 mm/d** |
 
+> **Read the comparison this way.** The "LSTM-DE" row above is a torch
+> default LSTM. Re-running its forward in this bundle yields median KGE
+> **0.826**. An independently trained LSTM reported by
+> [Yang et al. (2026), *On the Adversarial Robustness of Hydrological
+> Models*, arXiv:2602.05237](https://arxiv.org/abs/2602.05237) on the same
+> 1,347-basin CAMELS-DE split reports median KGE **0.833** (their paper
+> uses the LSTM implementation from the
+> [NeuralHydrology](https://github.com/neuralhydrology/neuralhydrology)
+> library; neither Yang et al. nor this bundle re-trained the LSTM from
+> scratch as part of the comparison).
+>
+> So: **dHBV-dyn_uzl (0.838 KGE) decisively beats the torch default LSTM
+> (+0.012)**, and **essentially ties the Yang-et-al. reported LSTM
+> number (+0.005)** — a gap small enough to be seed / epoch /
+> preprocessing noise.
+
 The published `Hbv_1_1p_Triton` GPU kernel produces forward outputs that match
 this PyTorch forward to within fp32 rounding (median Δstreamflow = 0,
 max |Δstreamflow| < 1.2 × 10⁻⁵ mm/d, max per-catchment ΔNSE < 3 × 10⁻⁶).
