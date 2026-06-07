@@ -1,0 +1,9 @@
+torch>=2.0
+numpy>=1.24
+pandas>=2.0
+matplotlib>=3.7
+pyyaml>=6.0
+HydroErr>=1.24
+# The differentiable HBV class and the ModelHandler / Trainer come from these:
+dmg>=0.4.0
+hydrodl2>=0.4.0

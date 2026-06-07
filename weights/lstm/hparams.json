@@ -1,0 +1,14 @@
+{
+  "latent_dim": 16,
+  "lstm_hidden_dim": 254,
+  "n_lstm_layers": 1,
+  "n_fc_layers": 2,
+  "fc_sizes": [
+    13,
+    5
+  ],
+  "dropout_rate": 0.0,
+  "feature_dim": 3,
+  "n_catch": 1347,
+  "base_length": 365
+}

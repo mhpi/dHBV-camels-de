@@ -1,0 +1,21 @@
+# Generated / large
+data/raw/
+data/*.pkl
+data/*.npy
+data/data_test_CAMELS_DE1.00.csv
+data/data_*_CAMELS_DE*.csv
+results/
+scratch_*/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+.python-version
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
