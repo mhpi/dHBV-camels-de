@@ -68,21 +68,14 @@ python reproduce.py --root . --out-dir results/
 ```
 
 **Pinned dependencies.** `requirements.txt` pins `dmg` to commit
-[`f9af805`](https://github.com/mhpi/generic_deltamodel/commit/f9af805933eda099ee88f039122d49badf99d078)
-and `hydrodl2` to commit `769da56`. These are the exact versions this bundle
-was trained and tested against. Two reasons not to use unpinned `pip install
-dmg`:
-
-1. Pre-2026 `dmg` releases lack `camels_de` in `HydroLoader.supported_data`
-   and reject the configuration.
-2. `dmg.trainers.trainer.calc_metrics` strips the 365-day warm-up from the
-   target tensor without symmetric stripping on the prediction. With the
-   pinned `hydrodl2` (whose `Hbv_1_1p.forward` returns post-warm-up only)
-   the two arrays match. With some newer `hydrodl2` revisions the model
-   returns the full test window (4,018 days) and you'll see
-   `operands could not be broadcast (1347,4018) vs (1347,3653)` from the
-   metrics step. Until that asymmetry is fixed upstream, stay on the
-   pinned hash.
+[`05db58e`](https://github.com/mhpi/generic_deltamodel/commit/05db58e89927072551b1519612671b9acd64a48a)
+(includes [PR #112](https://github.com/mhpi/generic_deltamodel/pull/112),
+which makes warm-up handling in `calc_metrics` symmetric and supports both
+post-warm-up and full-window model output conventions). `hydrodl2` is pinned
+to commit `769da56` — the exact version used to train and verify the
+shipped weights. The pin is conservative: unpinning hydrodl2 is likely fine
+now that the metric alignment is symmetric upstream, but it has not been
+re-verified end-to-end against these specific weights.
 
 Outputs (`results/`):
 - `dhbv_streamflow.npy`, `lstm_streamflow.npy`, `streamflow_obs.npy`  (1347 × 3653)

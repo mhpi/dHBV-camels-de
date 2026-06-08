@@ -4,12 +4,13 @@ pandas>=2.0
 matplotlib>=3.7
 pyyaml>=6.0
 
-# dmg + hydrodl2 are pinned to the exact commits this bundle was trained and
-# tested against. Newer dmg versions have not yet been verified against this
-# release; in particular, the dmg `calc_metrics` step asymmetrically strips
-# the 365-day warm-up from the target but not from the prediction, which
-# crashes on any model whose forward returns the full test window. The pin
-# below uses an HBV that returns the post-warm-up window only, so the
-# asymmetry is invisible.
-dmg @ git+https://github.com/mhpi/generic_deltamodel.git@f9af805933eda099ee88f039122d49badf99d078
+# dmg is pinned to a commit that includes the warm-up symmetry fix
+# (mhpi/generic_deltamodel#112). Earlier pre-#112 dmg revisions silently
+# crashed `calc_metrics` for any model whose forward returned the full
+# (pre-warm-up) test window.
+dmg @ git+https://github.com/mhpi/generic_deltamodel.git@05db58e89927072551b1519612671b9acd64a48a
+# hydrodl2 is pinned to the exact commit used to train and verify the
+# checkpoints shipped under weights/. Newer revisions are likely fine now
+# that the dmg-side metric alignment is symmetric, but unpinning has not
+# been re-verified end-to-end against these specific weights.
 hydrodl2 @ git+https://github.com/mhpi/hydrodl2.git@769da56f6
