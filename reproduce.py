@@ -7,7 +7,7 @@ bias / low-flow RMSE / high-flow RMSE, and writes a 4-panel boxplot PNG plus
 summary CSVs.
 
 Expected median NSE on the test window 2011-01-01 .. 2020-12-31:
-    dHBV-base 0.838,  dHBV-dyn_uzl 0.869,  LSTM-DE 0.866.
+    dHBV-base 0.838,  dHBV-dyn_uzl 0.869,  torch.nn.LSTM 0.866.
 
 Usage
 -----
@@ -59,7 +59,7 @@ SEASON_MONTHS = {
     "ALL": list(range(1, 13)),
 }
 SEASONS = list(SEASON_MONTHS)
-COLORS = {"dHBV-base": "#d95f02", "dHBV-dyn_uzl": "#1b9e77", "LSTM-DE": "#7570b3"}
+COLORS = {"dHBV-base": "#d95f02", "dHBV-dyn_uzl": "#1b9e77", "torch.nn.LSTM": "#7570b3"}
 
 
 # ────────────────────────── dHBV forward (via dmg) ──────────────────────────
@@ -345,13 +345,13 @@ def main():
         model_order.append(v["name"])
 
     if "lstm" in chosen:
-        print("\n=== LSTM-DE forward ===")
+        print("\n=== torch.nn.LSTM forward ===")
         pred, obs = run_lstm(os.path.join(root, "weights", "lstm"),
                              os.path.join(root, "data", "data_test_CAMELS_DE1.00.csv"),
                              device=args.device)
         np.save(os.path.join(args.out_dir, "lstm_streamflow.npy"), pred)
-        model_data["LSTM-DE"] = (pred, obs)
-        model_order.append("LSTM-DE")
+        model_data["torch.nn.LSTM"] = (pred, obs)
+        model_order.append("torch.nn.LSTM")
 
     if model_order:
         first_obs = next(iter(model_data.values()))[1]
