@@ -67,12 +67,22 @@ python data/preprocess.py \
 python reproduce.py --root . --out-dir results/
 ```
 
-**Known dmg-side gotcha** (older releases only): some pre-2026 `dmg` releases
-have a `HydroLoader.supported_data` whitelist that does not include
-`camels_de`, which causes a hard error at data-loader construction. This is
-fixed in the current `mhpi/generic_deltamodel` main branch; if you hit it on
-an older pinned version, either upgrade or add the string `"camels_de"` to
-the whitelist in `dmg/core/data/loaders/hydro_loader.py`.
+**Pinned dependencies.** `requirements.txt` pins `dmg` to commit
+[`f9af805`](https://github.com/mhpi/generic_deltamodel/commit/f9af805933eda099ee88f039122d49badf99d078)
+and `hydrodl2` to commit `769da56`. These are the exact versions this bundle
+was trained and tested against. Two reasons not to use unpinned `pip install
+dmg`:
+
+1. Pre-2026 `dmg` releases lack `camels_de` in `HydroLoader.supported_data`
+   and reject the configuration.
+2. `dmg.trainers.trainer.calc_metrics` strips the 365-day warm-up from the
+   target tensor without symmetric stripping on the prediction. With the
+   pinned `hydrodl2` (whose `Hbv_1_1p.forward` returns post-warm-up only)
+   the two arrays match. With some newer `hydrodl2` revisions the model
+   returns the full test window (4,018 days) and you'll see
+   `operands could not be broadcast (1347,4018) vs (1347,3653)` from the
+   metrics step. Until that asymmetry is fixed upstream, stay on the
+   pinned hash.
 
 Outputs (`results/`):
 - `dhbv_streamflow.npy`, `lstm_streamflow.npy`, `streamflow_obs.npy`  (1347 × 3653)

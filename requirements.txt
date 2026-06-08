@@ -3,7 +3,13 @@ numpy>=1.24
 pandas>=2.0
 matplotlib>=3.7
 pyyaml>=6.0
-HydroErr>=1.24
-# The differentiable HBV class and the ModelHandler / Trainer come from these:
-dmg>=0.4.0
-hydrodl2>=0.4.0
+
+# dmg + hydrodl2 are pinned to the exact commits this bundle was trained and
+# tested against. Newer dmg versions have not yet been verified against this
+# release; in particular, the dmg `calc_metrics` step asymmetrically strips
+# the 365-day warm-up from the target but not from the prediction, which
+# crashes on any model whose forward returns the full test window. The pin
+# below uses an HBV that returns the post-warm-up window only, so the
+# asymmetry is invisible.
+dmg @ git+https://github.com/mhpi/generic_deltamodel.git@f9af805933eda099ee88f039122d49badf99d078
+hydrodl2 @ git+https://github.com/mhpi/hydrodl2.git@769da56f6
