@@ -1,0 +1,21 @@
+help:
+  app_name: dmg
+  header: == ${hydra.help.app_name} ==
+  template: |-
+    ${hydra.help.header}
+
+    PyTorch-based differentiable modeling framework developed by MHPI.
+
+    ${hydra.help.footer}
+  footer: |-
+    Powered by Hydra (https://hydra.cc)
+    Use --hydra-help to view Hydra-specific help
+job:
+  name: dmg-v${oc.env:DMG_VERSION}
+  chdir: True
+run:
+  dir: ${oc.select:run_dir,${hydra:runtime.cwd}/output/${name}/${exp_dir:${oc.select:exp_name,null}}}
+output_subdir: configs
+sweep:
+  dir: multirun
+  subdir: ${hydra.job.override_dirname}

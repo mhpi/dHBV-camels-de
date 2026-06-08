@@ -1,38 +1,35 @@
 #!/usr/bin/env bash
-# Download the CAMELS-DE 1.0 archive from Zenodo (~3 GB).
+# Download the CAMELS-DE 1.0 archive from Zenodo (~2.2 GB).
 # Zenodo record: https://zenodo.org/records/13837553
+# The record ships a single archive `camels_de.zip` that expands to
+#   timeseries/                            (per-catchment hydromet CSVs)
+#   timeseries_simulated/                  (Hargreaves PET in discharge_sim CSVs)
+#   CAMELS_DE_climatic_attributes.csv
+#   CAMELS_DE_topographic_attributes.csv
+#   CAMELS_DE_soil_attributes.csv
+#   CAMELS_DE_landcover_attributes.csv
+#   ... (other attribute CSVs)
+# preprocess.py reads from this expanded layout under --de-root.
 set -euo pipefail
 
 OUT_DIR="${1:-./raw}"
 mkdir -p "$OUT_DIR"
 cd "$OUT_DIR"
 
-BASE="https://zenodo.org/records/13837553/files"
-FILES=(
-    "CAMELS_DE_attributes.zip"
-    "CAMELS_DE_climatic_attributes.csv"
-    "CAMELS_DE_hydrometeorology.zip"
-    "CAMELS_DE_humaninfluence_attributes.csv"
-    "CAMELS_DE_hydrologic_attributes.csv"
-    "CAMELS_DE_landcover_attributes.csv"
-    "CAMELS_DE_soil_attributes.csv"
-    "CAMELS_DE_topographic_attributes.csv"
-)
+URL="https://zenodo.org/records/13837553/files/camels_de.zip"
+ZIP="camels_de.zip"
 
-for f in "${FILES[@]}"; do
-    if [[ ! -f "$f" ]]; then
-        echo "Downloading $f ..."
-        wget -q --show-progress "$BASE/$f"
-    else
-        echo "Already have $f, skipping."
-    fi
-done
+if [[ ! -f "$ZIP" ]]; then
+    echo "Downloading $ZIP from $URL ..."
+    wget -q --show-progress "$URL"
+else
+    echo "Already have $ZIP, skipping download."
+fi
 
-for z in CAMELS_DE_attributes.zip CAMELS_DE_hydrometeorology.zip; do
-    if [[ -f "$z" && ! -d "${z%.zip}" ]]; then
-        echo "Unzipping $z ..."
-        unzip -q "$z"
-    fi
-done
+# Unpack into the same directory. The zip's top-level layout matches what
+# preprocess.py expects when passed --de-root pointing at this directory.
+echo "Unzipping $ZIP ..."
+unzip -q -o "$ZIP"
 
 echo "Done. Raw CAMELS-DE is in $OUT_DIR"
+echo "Next: python data/preprocess.py --de-root $OUT_DIR --selected data/selected_catchments_1347.csv --out-dir data/"

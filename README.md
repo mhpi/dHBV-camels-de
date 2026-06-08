@@ -56,13 +56,23 @@ ships only the PyTorch path.
 ```bash
 pip install -r requirements.txt
 
-# 1. Get the data (one-time; ~3 GB):
-bash data/download_camels_de.sh
-python data/preprocess.py --raw data/raw --out data/
+# 1. Get the data (one-time; ~2.2 GB Zenodo download + unzip):
+bash data/download_camels_de.sh data/raw
+python data/preprocess.py \
+    --de-root data/raw \
+    --selected data/selected_catchments_1347.csv \
+    --out-dir data/
 
 # 2. Run the forward + metrics:
 python reproduce.py --root . --out-dir results/
 ```
+
+**Known dmg-side gotcha** (older releases only): some pre-2026 `dmg` releases
+have a `HydroLoader.supported_data` whitelist that does not include
+`camels_de`, which causes a hard error at data-loader construction. This is
+fixed in the current `mhpi/generic_deltamodel` main branch; if you hit it on
+an older pinned version, either upgrade or add the string `"camels_de"` to
+the whitelist in `dmg/core/data/loaders/hydro_loader.py`.
 
 Outputs (`results/`):
 - `dhbv_streamflow.npy`, `lstm_streamflow.npy`, `streamflow_obs.npy`  (1347 × 3653)

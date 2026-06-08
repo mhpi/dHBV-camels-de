@@ -63,15 +63,29 @@ COLORS = {"dHBV-base": "#d95f02", "dHBV-dyn_uzl": "#1b9e77", "LSTM-DE": "#7570b3
 
 
 # ────────────────────────── dHBV forward (via dmg) ──────────────────────────
+def _load_config(path: str) -> dict:
+    """Inlined version of `example.load_config` so users don't need a separate
+    `generic_deltamodel` clone on PYTHONPATH. Uses `initialize_config_dir`
+    with the absolute path so resolution is independent of CWD."""
+    import os
+    import hydra
+    from dmg.core.utils import initialize_config
+
+    abs_dir = os.path.abspath(os.path.dirname(path))
+    config_name = os.path.splitext(os.path.basename(path))[0]
+    with hydra.initialize_config_dir(config_dir=abs_dir, version_base="1.3"):
+        cfg = hydra.compose(config_name=config_name)
+    return initialize_config(cfg, make_dirs=False)
+
+
 def run_dhbv(weights_dir: str, config_path: str, data_pkl: str, gage_info: str,
              scratch_dir: str, test_epoch: int = 100, device: str = "cuda"
              ) -> Tuple[np.ndarray, np.ndarray]:
     """Forward of one dHBV variant; return (pred, obs) shaped (N, T)."""
-    from example import load_config
     from dmg import ModelHandler
     from dmg.core.utils import import_data_loader, import_trainer, set_randomseed
 
-    cfg = load_config(config_path)
+    cfg = _load_config(config_path)
     cfg["mode"] = "test"
     cfg["device"] = device
     cfg["observations"]["data_path"] = data_pkl
@@ -95,8 +109,24 @@ def run_dhbv(weights_dir: str, config_path: str, data_pkl: str, gage_info: str,
 
 
 # ────────────────────────── LSTM forward (inline) ───────────────────────────
+class _TimeDistributed(nn.Module):
+    """Wraps a module so per-timestep application keeps a `.m` attribute,
+    matching the state_dict key layout of the released checkpoint."""
+
+    def __init__(self, module: nn.Module):
+        super().__init__()
+        self.m = module
+
+    def forward(self, x):
+        return self.m(x)
+
+
 class _LSTMDecoder(nn.Module):
-    """Catchment-embedding + LSTM decoder used as the LSTM baseline."""
+    """Catchment-embedding + LSTM decoder used as the LSTM baseline.
+
+    The FC head is wrapped in `_TimeDistributed` to match the released
+    checkpoint key layout (`fc.m.0/3/6.weight` etc.).
+    """
 
     def __init__(self, latent_dim: int, feature_dim: int, lstm_hidden_dim: int,
                  fc_sizes: list[int], num_lstm_layers: int = 1, p: float = 0.0):
@@ -111,13 +141,13 @@ class _LSTMDecoder(nn.Module):
             layers += [nn.Linear(prev, s), nn.ReLU(), nn.Dropout(p)]
             prev = s
         layers += [nn.Linear(prev, 1)]
-        self.head = nn.Sequential(*layers)
+        self.fc = _TimeDistributed(nn.Sequential(*layers))
 
     def decode(self, code: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
         T = x.size(1)
         code_t = code.unsqueeze(1).expand(-1, T, -1)
         h, _ = self.lstm(torch.cat([code_t, x], dim=2))
-        return self.head(h).squeeze(-1)[:, 365:]
+        return self.fc(h).squeeze(-1)[:, 365:]
 
 
 def run_lstm(weights_dir: str, test_csv: str, device: str = "cuda"
